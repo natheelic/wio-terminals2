@@ -38,5 +38,6 @@ void drawWiFiManualSetup(AppState* state) {
             tft->setTextColor(THEME_TEXT);
         }
         tft->drawString(String(i + 1) + ". " + manualOptions[i], 25, y_pos - 1);
+        tft->drawString("NAV: 5-way | (A)OK (B)Back (C)Home", 10, 220);
     }
 }

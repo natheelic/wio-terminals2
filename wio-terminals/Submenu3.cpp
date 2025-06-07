@@ -17,5 +17,6 @@ void drawSubmenu3(AppState* state) {
 
   tft->setTextColor(THEME_WARNING);
   tft->setTextSize(1);
-  tft->drawString("Press any button to return", 20, 220);
+  tft->drawString("(B)Back | (C)Home", 20, 220);
+  // tft->drawString("Press any button to return", 20, 220);
 }

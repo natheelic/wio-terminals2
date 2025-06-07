@@ -14,5 +14,6 @@ void drawSubmenu2(AppState* state) {
   tft->drawString("Humidity: 65%", 30, 90);
   
   tft->setTextColor(THEME_WARNING);
-  tft->drawString("Press any button to return", 20, 220);
+  tft->drawString("(B)Back | (C)Home", 20, 220);
+  // tft->drawString("Press any button to return", 20, 220);
 }

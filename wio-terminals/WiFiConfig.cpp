@@ -35,5 +35,6 @@ void drawWiFiConfig(AppState* state) {
   }
   
   tft->setTextColor(THEME_WARNING);
-  tft->drawString("UP/DOWN: Navigate, CENTER: Select", 20, 220);
+  tft->drawString("NAV: 5-way | (A)OK (B)Back (C)Home", 10, 220);
+  // tft->drawString("UP/DOWN: Navigate, CENTER: Select", 20, 220);
 }

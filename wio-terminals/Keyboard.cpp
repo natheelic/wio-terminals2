@@ -69,4 +69,5 @@ void drawKeyboard(AppState* state) {
   tft->fillRoundRect(264, specialY, 50, keyHeight, CORNER_RADIUS, returnSelected ? THEME_PRIMARY : THEME_SUCCESS);
   tft->setTextColor(returnSelected ? THEME_BG : THEME_KEY_TEXT);
   tft->drawString("OK", 278, specialY + 6);
+  tft->drawString("(B) Backspace", 10, 220);
 }
