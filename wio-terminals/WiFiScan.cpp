@@ -1,6 +1,6 @@
 #include "WiFiScan.h"
 #include "WiFiUtils.h"
-#include "Theme.h"
+#include "Theme.h" // Assuming you are using the theme file
 
 // Helper function to draw WiFi signal strength icon
 void drawSignalStrength(TFT_eSPI* tft, int x, int y, int rssi) {
@@ -12,24 +12,22 @@ void drawSignalStrength(TFT_eSPI* tft, int x, int y, int rssi) {
 
     for (int i = 0; i < 4; i++) {
         int barHeight = 4 + (i * 3);
-        if (i < bars) {
-            tft->fillRect(x + (i * 5), y - barHeight, 4, barHeight, THEME_TEXT);
-        } else {
-            tft->fillRect(x + (i * 5), y - barHeight, 4, barHeight, THEME_SECONDARY);
-        }
+        uint16_t barColor = (i < bars) ? THEME_TEXT : THEME_SECONDARY;
+        tft->fillRect(x + (i * 5), y - barHeight, 4, barHeight, barColor);
     }
 }
 
 // Helper function to draw lock icon
-void drawLockIcon(TFT_eSPI* tft, int x, int y) {
+void drawLockIcon(TFT_eSPI* tft, int x, int y, uint16_t bgColor) {
     tft->fillRoundRect(x, y, 12, 10, 2, THEME_TEXT);
     tft->fillCircle(x + 6, y - 4, 5, THEME_TEXT);
-    tft->fillCircle(x + 6, y - 4, 3, THEME_BG);
+    tft->fillCircle(x + 6, y - 4, 3, bgColor);
 }
 
-
 void drawWiFiScan(AppState* state) {
+    const int MAX_VISIBLE_NETWORKS = 6; // จำนวนเครือข่ายสูงสุดที่จะแสดงในหนึ่งหน้าจอ
     TFT_eSPI* tft = state->tft;
+
     tft->fillScreen(THEME_BG);
     tft->setTextColor(THEME_TEXT);
     tft->setTextSize(2);
@@ -39,27 +37,43 @@ void drawWiFiScan(AppState* state) {
     if (state->foundNetworks == 0) {
         tft->setTextColor(THEME_DANGER);
         tft->drawString("No networks found.", 30, 80);
-        tft->drawString("Press CENTER to scan again.", 30, 100);
+        tft->drawString("Press (A) to scan again.", 30, 100);
     } else {
-        for (int i = 0; i < state->foundNetworks && i < 7; i++) { // Show up to 7 networks
-            int y_pos = 40 + i * 28;
-            if (i == state->selectedWiFiItem) {
-                tft->fillRoundRect(10, y_pos - 5, 300, 26, CORNER_RADIUS, THEME_PRIMARY);
+        // --- Draw Scroll Indicators ---
+        if (state->wifiScanScrollOffset > 0) {
+            tft->fillTriangle(310, 40, 305, 50, 315, 50, THEME_SECONDARY); // Up Arrow
+        }
+        if (state->wifiScanScrollOffset + MAX_VISIBLE_NETWORKS < state->foundNetworks) {
+            tft->fillTriangle(310, 210, 305, 200, 315, 200, THEME_SECONDARY); // Down Arrow
+        }
+
+        // --- Draw Network List with Scrolling ---
+        for (int i = 0; i < MAX_VISIBLE_NETWORKS; i++) {
+            int networkIndex = state->wifiScanScrollOffset + i;
+            if (networkIndex >= state->foundNetworks) {
+                break; // Stop if we have drawn all found networks
+            }
+
+            int y_pos = 50 + i * 28;
+            uint16_t currentBgColor = THEME_BG;
+
+            if (networkIndex == state->selectedWiFiItem) {
+                tft->fillRoundRect(10, y_pos - 5, 290, 26, CORNER_RADIUS, THEME_PRIMARY);
                 tft->setTextColor(THEME_BG);
+                currentBgColor = THEME_PRIMARY;
             } else {
                 tft->setTextColor(THEME_TEXT);
             }
             
-            tft->drawString(state->networkNames[i], 20, y_pos);
+            tft->drawString(state->networkNames[networkIndex], 20, y_pos);
 
             // Draw icons on the right side
-            drawSignalStrength(tft, 250, y_pos + 12, state->networkRSSI[i]);
-            if (state->networkSecurity[i] != WIFI_AUTH_OPEN) {
-                drawLockIcon(tft, 280, y_pos + 2);
+            drawSignalStrength(tft, 230, y_pos + 12, state->networkRSSI[networkIndex]);
+            if (state->networkSecurity[networkIndex] != WIFI_AUTH_OPEN) {
+                drawLockIcon(tft, 260, y_pos + 2, currentBgColor);
             }
         }
     }
     tft->setTextColor(THEME_WARNING);
     tft->drawString("NAV: 5-way | (A)Connect (B)Back (C)Home", 10, 220);
-    // tft->drawString("UP/DOWN: Select, CENTER: Connect, LEFT: Back", 10, 220);
 }

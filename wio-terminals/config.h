@@ -26,6 +26,7 @@ struct AppState {
   int networkSecurity[10];
   int selectedNetworkIndex;
   ConnectionStatus wifiConnectionStatus;
+  int wifiScanScrollOffset;
 };
 
 extern const char keyboard[4][10];

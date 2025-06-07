@@ -136,28 +136,66 @@ void handleKeyC(AppState* state) {
 
 // --- MODIFIED Original Handlers ---
 
+// --- COPY AND REPLACE THESE TWO FUNCTIONS IN input.cpp ---
+
 void handleUp(AppState* state) {
+  const int MAX_VISIBLE_NETWORKS = 6; // Make sure this matches the value in WiFiScan.cpp
   switch (state->currentState) {
     case MAIN_MENU: state->selectedMenuItem = (state->selectedMenuItem - 1 + 3) % 3; drawMainMenu(state); break;
     case SUBMENU_1: state->selectedWiFiItem = (state->selectedWiFiItem - 1 + 4) % 4; drawSubmenu1(state); break;
     case WIFI_CONFIG: state->selectedWiFiItem = (state->selectedWiFiItem - 1 + 4) % 4; drawWiFiConfig(state); break;
     case WIFI_MANUAL_SETUP: state->selectedWiFiItem = (state->selectedWiFiItem - 1 + 4) % 4; drawWiFiManualSetup(state); break;
-    case WIFI_SCAN: if (state->foundNetworks > 0) { state->selectedWiFiItem = (state->selectedWiFiItem - 1 + state->foundNetworks) % state->foundNetworks; drawWiFiScan(state); } break;
+    case WIFI_SCAN:
+      if (state->foundNetworks > 0) {
+        int oldSelection = state->selectedWiFiItem;
+        state->selectedWiFiItem = (state->selectedWiFiItem - 1 + state->foundNetworks) % state->foundNetworks;
+        
+        // NEW LOGIC: Check for wrap-around from first to last item
+        if (state->selectedWiFiItem > oldSelection) { 
+            // This means we wrapped around from 0 to the last item.
+            // Scroll the view to the bottom.
+            state->wifiScanScrollOffset = state->foundNetworks - MAX_VISIBLE_NETWORKS;
+            if (state->wifiScanScrollOffset < 0) state->wifiScanScrollOffset = 0;
+        } 
+        // Logic to scroll view up when selection goes above the visible area
+        else if (state->selectedWiFiItem < state->wifiScanScrollOffset) {
+          state->wifiScanScrollOffset = state->selectedWiFiItem;
+        }
+        drawWiFiScan(state);
+      }
+      break;
     case KEYBOARD_INPUT: state->keyboardRow = (state->keyboardRow - 1 + 5) % 5; drawKeyboard(state); break;
   }
 }
 
 void handleDown(AppState* state) {
+  const int MAX_VISIBLE_NETWORKS = 6; // Make sure this matches the value in WiFiScan.cpp
   switch (state->currentState) {
     case MAIN_MENU: state->selectedMenuItem = (state->selectedMenuItem + 1) % 3; drawMainMenu(state); break;
     case SUBMENU_1: state->selectedWiFiItem = (state->selectedWiFiItem + 1) % 4; drawSubmenu1(state); break;
     case WIFI_CONFIG: state->selectedWiFiItem = (state->selectedWiFiItem + 1) % 4; drawWiFiConfig(state); break;
     case WIFI_MANUAL_SETUP: state->selectedWiFiItem = (state->selectedWiFiItem + 1) % 4; drawWiFiManualSetup(state); break;
-    case WIFI_SCAN: if (state->foundNetworks > 0) { state->selectedWiFiItem = (state->selectedWiFiItem + 1) % state->foundNetworks; drawWiFiScan(state); } break;
+    case WIFI_SCAN:
+      if (state->foundNetworks > 0) {
+        int oldSelection = state->selectedWiFiItem;
+        state->selectedWiFiItem = (state->selectedWiFiItem + 1) % state->foundNetworks;
+        
+        // NEW LOGIC: Check for wrap-around from last to first item
+        if (state->selectedWiFiItem < oldSelection) {
+            // This means we wrapped around from the last item back to 0.
+            // Reset scroll to the top.
+            state->wifiScanScrollOffset = 0;
+        } 
+        // Logic to scroll view down when selection goes below the visible area
+        else if (state->selectedWiFiItem >= state->wifiScanScrollOffset + MAX_VISIBLE_NETWORKS) {
+          state->wifiScanScrollOffset = state->selectedWiFiItem - MAX_VISIBLE_NETWORKS + 1;
+        }
+        drawWiFiScan(state);
+      }
+      break;
     case KEYBOARD_INPUT: state->keyboardRow = (state->keyboardRow + 1) % 5; drawKeyboard(state); break;
   }
 }
-
 void handleLeft(AppState* state) {
   // Left button is now mainly for keyboard navigation
   switch (state->currentState) {
@@ -189,7 +227,7 @@ void handleCenter(AppState* state) {
       // These screens now use Key B (Back) or Key C (Home) to exit
       break;
     case WIFI_CONFIG:
-      if (state->selectedWiFiItem == 0) { state->currentState = WIFI_SCAN; scanWiFiNetworks(state); drawWiFiScan(state); }
+      if (state->selectedWiFiItem == 0) { state->currentState = WIFI_SCAN; state->wifiScanScrollOffset = 0; scanWiFiNetworks(state); drawWiFiScan(state); }
       else if (state->selectedWiFiItem == 1) { state->currentState = WIFI_MANUAL_SETUP; state->wifiSSID = ""; state->wifiPassword = ""; state->selectedWiFiItem = 0; drawWiFiManualSetup(state); }
       else if (state->selectedWiFiItem == 2) { WiFi.disconnect(); clearWiFiCredentials(); drawWiFiConfig(state); }
       else if (state->selectedWiFiItem == 3) { state->currentState = SUBMENU_1; drawSubmenu1(state); } // Back option
