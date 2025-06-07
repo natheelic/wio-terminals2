@@ -26,6 +26,7 @@ void drawWiFiConnect(AppState* state) {
                 tft->drawString("This is an open network.", 20, y_status);
                 tft->drawString("Press CENTER to connect.", 20, y_status + 20);
              } else {
+                tft->setTextColor(THEME_TEXT);
                 tft->drawString("Password required.", 20, y_status);
                 tft->drawString("Press CENTER to open keyboard.", 20, y_status + 20);
              }

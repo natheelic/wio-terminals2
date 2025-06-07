@@ -74,6 +74,7 @@ void drawWiFiScan(AppState* state) {
             }
         }
     }
-    tft->setTextColor(THEME_WARNING);
+    tft->setTextColor(THEME_WARNING);    
+    tft->setTextColor(THEME_TEXT);
     tft->drawString("NAV: 5-way | (A)Connect (B)Back (C)Home", 10, 220);
 }
