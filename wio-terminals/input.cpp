@@ -9,6 +9,7 @@
 #include "WiFiConnect.h"
 #include "WiFiManualSetup.h"
 #include "WiFiUtils.h"
+#include "drawResetConfirm.h"
 
 // Internal function declarations
 void handleUp(AppState *state);
@@ -335,6 +336,11 @@ void handleLeft(AppState *state)
     state->keyboardCol = (state->keyboardCol - 1 + cols) % cols;
     drawKeyboard(state);
   }
+  else if (state->currentState == RESET_CONFIRM)
+  {
+    state->selectedMenuItem = (state->selectedMenuItem - 1 + 2) % 2;
+    drawResetConfirm(state);
+  }
 }
 
 void handleRight(AppState *state)
@@ -344,6 +350,11 @@ void handleRight(AppState *state)
     int cols = (state->keyboardRow < 4) ? 10 : 3;
     state->keyboardCol = (state->keyboardCol + 1) % cols;
     drawKeyboard(state);
+  }
+  else if (state->currentState == RESET_CONFIRM)
+  {
+    state->selectedMenuItem = (state->selectedMenuItem + 1) % 2;
+    drawResetConfirm(state);
   }
 }
 
@@ -377,6 +388,12 @@ void handleCenter(AppState *state)
       state->currentState = WIFI_CONFIG;
       state->selectedWiFiItem = 0;
       drawWiFiConfig(state);
+    }
+    else if (state->selectedWiFiItem == 3)
+    { // <-- แก้ไขตรงนี้ จากเดิมไม่มี else if
+      state->currentState = RESET_CONFIRM;
+      state->selectedMenuItem = 1; // ให้ "No" เป็นค่าเริ่มต้น
+      drawResetConfirm(state);
     }
     break;
   case WIFI_CONFIG:
@@ -482,6 +499,17 @@ void handleCenter(AppState *state)
     break;
   case KEYBOARD_INPUT:
     handleKeyboardInput(state);
+    break;
+  case RESET_CONFIRM: // <--- เพิ่ม case นี้ทั้งหมด
+    if (state->selectedMenuItem == 0)
+    {                // Selected "Yes"
+      NVIC_SystemReset(); // สั่งให้เครื่องรีสตาร์ท
+    }
+    else
+    { // Selected "No"
+      state->currentState = SUBMENU_1;
+      drawSubmenu1(state);
+    }
     break;
   }
 }
