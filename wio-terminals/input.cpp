@@ -10,6 +10,7 @@
 #include "WiFiManualSetup.h"
 #include "WiFiUtils.h"
 #include "drawResetConfirm.h"
+#include "drawSystemInfo.h"
 
 // Internal function declarations
 void handleUp(AppState *state);
@@ -200,6 +201,15 @@ void handleKeyB(AppState *state)
         drawWiFiManualSetup(state);
       }
       break;
+    case RESET_CONFIRM:
+      state->currentState = SUBMENU_1;
+      drawSubmenu1(state);
+      break;
+
+    case SYSTEM_INFO: // <--- เพิ่ม case นี้
+      state->currentState = SUBMENU_1;
+      drawSubmenu1(state);
+      break;
     }
   }
 }
@@ -389,6 +399,11 @@ void handleCenter(AppState *state)
       state->selectedWiFiItem = 0;
       drawWiFiConfig(state);
     }
+    else if (state->selectedWiFiItem == 2)
+    { // <--- เพิ่ม else if นี้
+      state->currentState = SYSTEM_INFO;
+      drawSystemInfo(state);
+    }
     else if (state->selectedWiFiItem == 3)
     { // <-- แก้ไขตรงนี้ จากเดิมไม่มี else if
       state->currentState = RESET_CONFIRM;
@@ -502,7 +517,7 @@ void handleCenter(AppState *state)
     break;
   case RESET_CONFIRM: // <--- เพิ่ม case นี้ทั้งหมด
     if (state->selectedMenuItem == 0)
-    {                // Selected "Yes"
+    {                     // Selected "Yes"
       NVIC_SystemReset(); // สั่งให้เครื่องรีสตาร์ท
     }
     else

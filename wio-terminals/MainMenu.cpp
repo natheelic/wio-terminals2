@@ -13,7 +13,7 @@ void drawMainMenu(AppState* state) {
   tft->drawLine(0, 30, 320, 30, THEME_SECONDARY);
 
   // --- Draw Menu Cards ---
-  String menuItems[] = {"Settings", "Data View", "Text Input"};
+  String menuItems[] = {"Settings", "Network Tools", "Sensors on Device"};
   String menuIcons[] = {">", "o", "#"}; // Simple icons for demonstration
 
   for (int i = 0; i < 3; i++) {
