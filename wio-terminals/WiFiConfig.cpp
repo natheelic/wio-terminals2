@@ -20,7 +20,7 @@ void drawWiFiConfig(AppState* state) {
   }
   
   tft->setTextColor(TFT_CYAN);
-  String wifiOptions[] = {"Scan Networks", "Manual Setup", "Disconnect", "Back"};
+  String wifiOptions[] = {"Scan Networks", "Manual Setup", "Forget Network", "Back"};
   for (int i = 0; i < 4; i++) {
     if (i == state->selectedWiFiItem) {
       tft->setTextColor(TFT_BLACK);

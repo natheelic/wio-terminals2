@@ -3,13 +3,14 @@
 
 #include <TFT_eSPI.h>
 #include <rpcWiFi.h>
+#include <FlashStorage.h>
 
 enum ScreenState {
+  AUTO_CONNECTING,
   MAIN_MENU, SUBMENU_1, SUBMENU_2, SUBMENU_3,
   KEYBOARD_INPUT, WIFI_CONFIG, WIFI_SCAN,
   WIFI_CONNECT, WIFI_MANUAL_SETUP
 };
-
 enum ConnectionStatus { PENDING, CONNECTING, SUCCESS, FAILED };
 
 struct AppState {

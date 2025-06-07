@@ -19,6 +19,7 @@ void handleDown(AppState* state);
 void handleLeft(AppState* state);
 void handleRight(AppState* state);
 void handleCenter(AppState* state);
+void handleKeyboardInput(AppState* state); // เพิ่มการประกาศที่ขาดไป
 
 static bool upPressed = false, downPressed = false, leftPressed = false, rightPressed = false, centerPressed = false;
 
@@ -94,8 +95,8 @@ void handleCenter(AppState* state) {
       break;
     case WIFI_CONFIG:
       if (state->selectedWiFiItem == 0) { state->currentState = WIFI_SCAN; scanWiFiNetworks(state); drawWiFiScan(state); }
-      else if (state->selectedWiFiItem == 1) { state->currentState = WIFI_MANUAL_SETUP; state->wifiSSID = ""; state->wifiPassword = ""; drawWiFiManualSetup(state); }
-      else if (state->selectedWiFiItem == 2) { WiFi.disconnect(); drawWiFiConfig(state); }
+      else if (state->selectedWiFiItem == 1) { state->currentState = WIFI_MANUAL_SETUP; state->wifiSSID = ""; state->wifiPassword = ""; state->selectedWiFiItem = 0; drawWiFiManualSetup(state); }
+      else if (state->selectedWiFiItem == 2) { WiFi.disconnect(); clearWiFiCredentials(); drawWiFiConfig(state); }
       else if (state->selectedWiFiItem == 3) { state->currentState = SUBMENU_1; drawSubmenu1(state); }
       break;
     case WIFI_SCAN:
@@ -125,23 +126,58 @@ void handleCenter(AppState* state) {
       } else if (state->selectedWiFiItem == 3) { state->currentState = WIFI_CONFIG; drawWiFiConfig(state); }
       break;
     case KEYBOARD_INPUT:
-      if (state->keyboardRow < 4) { state->inputText += state->keyboardUpperCase ? keyboardUpper[state->keyboardRow][state->keyboardCol] : keyboard[state->keyboardRow][state->keyboardCol]; }
-      else {
-        if (state->keyboardCol == 0) { state->keyboardUpperCase = !state->keyboardUpperCase; }
-        else if (state->keyboardCol == 1) { state->inputText += ' '; }
-        else if (state->keyboardCol == 2) { if (state->inputText.length() > 0) state->inputText.remove(state->inputText.length() - 1); }
-        else if (state->keyboardCol == 3) { // OK
-          if (state->isEnteringPassword) {
-            state->wifiPassword = state->inputText; bool fromManual = (state->selectedNetworkIndex == -1);
-            if(fromManual) { state->currentState = WIFI_MANUAL_SETUP; drawWiFiManualSetup(state); }
-            else { state->currentState = WIFI_CONNECT; state->wifiConnectionStatus = CONNECTING; drawWiFiConnect(state); state->wifiConnectionStatus = connectToWiFi(state); drawWiFiConnect(state); }
-          } else if (state->isEnteringSSID) { state->wifiSSID = state->inputText; state->currentState = WIFI_MANUAL_SETUP; drawWiFiManualSetup(state); }
-          else { state->currentState = SUBMENU_3; drawSubmenu3(state); }
-          return;
-        }
-      }
-      drawKeyboard(state);
+      handleKeyboardInput(state);
       break;
     case SUBMENU_2: case SUBMENU_3: state->currentState = MAIN_MENU; drawMainMenu(state); break;
   }
+}
+
+// ============== ฟังก์ชันที่ขาดหายไป ถูกเพิ่มกลับเข้ามาแล้ว =================
+void handleKeyboardInput(AppState* state) {
+  if (state->keyboardRow < 4) { // Character keys
+    char selectedChar = state->keyboardUpperCase ? keyboardUpper[state->keyboardRow][state->keyboardCol] : keyboard[state->keyboardRow][state->keyboardCol];
+    if (state->inputText.length() < 32) {
+        state->inputText += selectedChar;
+    }
+  } else { // Special keys row
+    if (state->keyboardCol == 0) { // Shift
+      state->keyboardUpperCase = !state->keyboardUpperCase;
+    } else if (state->keyboardCol == 1) { // Space
+      state->inputText += ' ';
+    } else if (state->keyboardCol == 2) { // Backspace
+      if (state->inputText.length() > 0) {
+        state->inputText.remove(state->inputText.length() - 1);
+      }
+    } else if (state->keyboardCol == 3) { // Return/OK
+      if (state->isEnteringPassword) {
+        state->wifiPassword = state->inputText;
+        bool fromManual = (state->selectedNetworkIndex == -1);
+        if(fromManual) {
+             state->currentState = WIFI_MANUAL_SETUP;
+             drawWiFiManualSetup(state);
+        } else {
+            state->currentState = WIFI_CONNECT;
+            state->wifiConnectionStatus = CONNECTING;
+            drawWiFiConnect(state);
+            ConnectionStatus status = connectToWiFi(state);
+            state->wifiConnectionStatus = status;
+            
+            if (status == SUCCESS) {
+                saveWiFiCredentials(state);
+            }
+
+            drawWiFiConnect(state);
+        }
+      } else if (state->isEnteringSSID) {
+        state->wifiSSID = state->inputText;
+        state->currentState = WIFI_MANUAL_SETUP;
+        drawWiFiManualSetup(state);
+      } else {
+        state->currentState = SUBMENU_3;
+        drawSubmenu3(state);
+      }
+      return; // Exit to prevent redrawing keyboard
+    }
+  }
+  drawKeyboard(state); // Redraw keyboard to show changes
 }
