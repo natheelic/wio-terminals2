@@ -13,13 +13,19 @@ enum ScreenState {
 };
 enum ConnectionStatus { PENDING, CONNECTING, SUCCESS, FAILED };
 
+// NEW: Keyboard mode enum
+enum KeyboardMode { MODE_ALPHA_LOWER, MODE_ALPHA_UPPER, MODE_NUM_SYM };
+
 struct AppState {
   TFT_eSPI* tft;
   ScreenState currentState;
+  ScreenState previousState; // NEW: To remember where we came from
   int selectedMenuItem, selectedWiFiItem;
   String inputText, wifiSSID, wifiPassword;
   int keyboardRow, keyboardCol;
-  bool keyboardUpperCase, isEnteringPassword, isEnteringSSID;
+  // bool keyboardUpperCase is now replaced by keyboardMode
+  KeyboardMode keyboardMode; // NEW: To manage keyboard layout
+  bool isEnteringPassword, isEnteringSSID;
   int foundNetworks;
   String networkNames[10];
   int networkRSSI[10];
@@ -29,7 +35,9 @@ struct AppState {
   int wifiScanScrollOffset;
 };
 
+// Extern declarations for keyboard layouts
 extern const char keyboard[4][10];
 extern const char keyboardUpper[4][10];
+extern const char keyboardNumSym[4][10]; // NEW: For numbers and symbols
 
 #endif

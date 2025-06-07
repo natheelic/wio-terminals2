@@ -23,7 +23,7 @@ void setup() {
   appState.selectedWiFiItem = 0;
   appState.keyboardRow = 0;
   appState.keyboardCol = 0;
-  appState.keyboardUpperCase = false;
+  appState.keyboardMode = MODE_ALPHA_LOWER;
   appState.isEnteringPassword = false;
   appState.isEnteringSSID = false;
   appState.foundNetworks = 0;

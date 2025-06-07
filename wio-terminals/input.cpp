@@ -1,6 +1,4 @@
 #include "input.h"
-
-// Include screen headers
 #include "MainMenu.h"
 #include "Submenu1.h"
 #include "Submenu2.h"
@@ -10,7 +8,6 @@
 #include "WiFiScan.h"
 #include "WiFiConnect.h"
 #include "WiFiManualSetup.h"
-// Include utility headers
 #include "WiFiUtils.h"
 
 // Internal function declarations
@@ -19,118 +16,102 @@ void handleDown(AppState* state);
 void handleLeft(AppState* state);
 void handleRight(AppState* state);
 void handleCenter(AppState* state);
-void handleKeyA(AppState* state); // NEW: Handler for Key A
-void handleKeyB(AppState* state); // NEW: Handler for Key B
-void handleKeyC(AppState* state); // NEW: Handler for Key C
+void handleKeyA(AppState* state);
+void handleKeyB(AppState* state);
+void handleKeyC(AppState* state);
 void handleKeyboardInput(AppState* state);
+void enterKeyboard(AppState* state); // Helper function to enter keyboard state
 
-// Button press state flags
 static bool upPressed = false, downPressed = false, leftPressed = false, rightPressed = false, centerPressed = false;
-static bool keyAPressed = false, keyBPressed = false, keyCPressed = false; // NEW: Flags for side keys
+static bool keyAPressed = false, keyBPressed = false, keyCPressed = false;
 
 void initButtons() {
-  // 5-way switch
   pinMode(WIO_5S_UP, INPUT_PULLUP);
   pinMode(WIO_5S_DOWN, INPUT_PULLUP);
   pinMode(WIO_5S_LEFT, INPUT_PULLUP);
   pinMode(WIO_5S_RIGHT, INPUT_PULLUP);
   pinMode(WIO_5S_PRESS, INPUT_PULLUP);
-
-  // NEW: Initialize side keys
   pinMode(WIO_KEY_A, INPUT_PULLUP);
   pinMode(WIO_KEY_B, INPUT_PULLUP);
   pinMode(WIO_KEY_C, INPUT_PULLUP);
 }
 
 void handleButtons(AppState* state) {
-  // Read 5-way switch states
   bool upState = !digitalRead(WIO_5S_UP);
   bool downState = !digitalRead(WIO_5S_DOWN);
   bool leftState = !digitalRead(WIO_5S_LEFT);
   bool rightState = !digitalRead(WIO_5S_RIGHT);
   bool centerState = !digitalRead(WIO_5S_PRESS);
-
-  // NEW: Read side key states
   bool keyAState = !digitalRead(WIO_KEY_A);
   bool keyBState = !digitalRead(WIO_KEY_B);
   bool keyCState = !digitalRead(WIO_KEY_C);
 
-  // Handle presses
   if (upState && !upPressed) { upPressed = true; handleUp(state); } else if (!upState) { upPressed = false; }
   if (downState && !downPressed) { downPressed = true; handleDown(state); } else if (!downState) { downPressed = false; }
   if (leftState && !leftPressed) { leftPressed = true; handleLeft(state); } else if (!leftState) { leftPressed = false; }
   if (rightState && !rightPressed) { rightPressed = true; handleRight(state); } else if (!rightState) { rightPressed = false; }
-  
-  // Combine Center press and Key A press to trigger the same action
-  if ((centerState && !centerPressed) || (keyAState && !keyAPressed)) { 
-    centerPressed = centerState;
-    keyAPressed = keyAState;
-    handleCenter(state); // Key A will act as "Confirm/OK"
-  } else {
-    if (!centerState) { centerPressed = false; }
-    if (!keyAState) { keyAPressed = false; }
-  }
-
-  // Handle Key B and Key C
+  if (centerState && !centerPressed) { centerPressed = true; handleCenter(state); } else if (!centerState) { centerPressed = false; }
+  if (keyAState && !keyAPressed) { keyAPressed = true; handleKeyA(state); } else if (!keyAState) { keyAPressed = false; }
   if (keyBState && !keyBPressed) { keyBPressed = true; handleKeyB(state); } else if (!keyBState) { keyBPressed = false; }
   if (keyCState && !keyCPressed) { keyCPressed = true; handleKeyC(state); } else if (!keyCState) { keyCPressed = false; }
 }
 
-// NEW: Handler for Key A (acts as Center/OK)
-// We merge its logic into handleCenter, so this function is not needed.
-
-// NEW: Handler for Key B (acts as Back)
-void handleKeyB(AppState* state) {
-  switch (state->currentState) {
-    case SUBMENU_1:
-    case SUBMENU_2:
-    case SUBMENU_3:
-      state->currentState = MAIN_MENU;
-      drawMainMenu(state);
-      break;
-    case WIFI_CONFIG:
-      state->currentState = SUBMENU_1;
-      drawSubmenu1(state);
-      break;
-    case WIFI_SCAN:
-    case WIFI_MANUAL_SETUP:
-      state->currentState = WIFI_CONFIG;
-      drawWiFiConfig(state);
-      break;
-    case WIFI_CONNECT:
-       // If connected or failed, go back to config. If pending, go back to scan/manual.
-      if (state->wifiConnectionStatus == SUCCESS || state->wifiConnectionStatus == FAILED) {
-        state->currentState = WIFI_CONFIG;
-        drawWiFiConfig(state);
-      } else if (state->selectedNetworkIndex != -1) { // From scan
-        state->currentState = WIFI_SCAN;
-        drawWiFiScan(state);
-      } else { // From manual
-        state->currentState = WIFI_MANUAL_SETUP;
-        drawWiFiManualSetup(state);
-      }
-      break;
-    // On Keyboard, Key B will act as Backspace
-    case KEYBOARD_INPUT:
-      if (state->inputText.length() > 0) {
-        state->inputText.remove(state->inputText.length() - 1);
-        drawKeyboard(state);
-      }
-      break;
-    default:
-      // Do nothing on main menu
-      break;
-  }
+void enterKeyboard(AppState* state) {
+    state->previousState = state->currentState; // Remember where we came from
+    state->currentState = KEYBOARD_INPUT;
+    state->keyboardMode = MODE_ALPHA_LOWER;
+    state->keyboardRow = 0;
+    state->keyboardCol = 0;
+    drawKeyboard(state);
 }
 
-// NEW: Handler for Key C (acts as Home)
+void handleKeyA(AppState* state) {
+    if (state->currentState == KEYBOARD_INPUT) {
+        // Mode Switch: a-z -> A-Z -> 0-9 -> a-z
+        if (state->keyboardMode == MODE_ALPHA_LOWER) state->keyboardMode = MODE_ALPHA_UPPER;
+        else if (state->keyboardMode == MODE_ALPHA_UPPER) state->keyboardMode = MODE_NUM_SYM;
+        else state->keyboardMode = MODE_ALPHA_LOWER;
+        drawKeyboard(state);
+    } else {
+        handleCenter(state); // If not on keyboard, Key A acts as OK
+    }
+}
+
+void handleKeyB(AppState* state) {
+    if (state->currentState == KEYBOARD_INPUT) {
+        // Backspace
+        if (state->inputText.length() > 0) {
+            state->inputText.remove(state->inputText.length() - 1);
+            drawKeyboard(state);
+        }
+    } else {
+        // Go Back to previous screen
+        switch (state->currentState) {
+            case SUBMENU_1: case SUBMENU_2: case SUBMENU_3: state->currentState = MAIN_MENU; drawMainMenu(state); break;
+            case WIFI_CONFIG: state->currentState = SUBMENU_1; drawSubmenu1(state); break;
+            case WIFI_SCAN: case WIFI_MANUAL_SETUP: state->currentState = WIFI_CONFIG; drawWiFiConfig(state); break;
+            case WIFI_CONNECT:
+                if (state->wifiConnectionStatus == SUCCESS || state->wifiConnectionStatus == FAILED) { state->currentState = WIFI_CONFIG; drawWiFiConfig(state); }
+                else if (state->selectedNetworkIndex != -1) { state->currentState = WIFI_SCAN; drawWiFiScan(state); }
+                else { state->currentState = WIFI_MANUAL_SETUP; drawWiFiManualSetup(state); }
+                break;
+        }
+    }
+}
+
 void handleKeyC(AppState* state) {
-  // No matter where we are, go back to the main menu
-  if (state->currentState != MAIN_MENU) {
-    state->currentState = MAIN_MENU;
-    state->selectedMenuItem = 0; // Reset selection
-    drawMainMenu(state);
-  }
+    if (state->currentState == KEYBOARD_INPUT) {
+        // Space
+        if (state->inputText.length() < 32) state->inputText += ' ';
+        drawKeyboard(state);
+    } else {
+        // Go Home
+        if (state->currentState != MAIN_MENU) {
+            state->currentState = MAIN_MENU;
+            state->selectedMenuItem = 0;
+            drawMainMenu(state);
+        }
+    }
 }
 
 
@@ -197,17 +178,18 @@ void handleDown(AppState* state) {
   }
 }
 void handleLeft(AppState* state) {
-  // Left button is now mainly for keyboard navigation
-  switch (state->currentState) {
-    case KEYBOARD_INPUT: state->keyboardCol = (state->keyboardCol - 1 + (state->keyboardRow < 4 ? 10 : 4)) % (state->keyboardRow < 4 ? 10 : 4); drawKeyboard(state); break;
-    // The "Back" functionality is now handled by Key B for consistency.
+  if (state->currentState == KEYBOARD_INPUT) {
+      int cols = (state->keyboardRow < 4) ? 10 : 3;
+      state->keyboardCol = (state->keyboardCol - 1 + cols) % cols;
+      drawKeyboard(state);
   }
 }
 
 void handleRight(AppState* state) {
-  // Right button is now mainly for keyboard navigation
-  switch(state->currentState) {
-    case KEYBOARD_INPUT: state->keyboardCol = (state->keyboardCol + 1) % (state->keyboardRow < 4 ? 10 : 4); drawKeyboard(state); break;
+  if (state->currentState == KEYBOARD_INPUT) {
+      int cols = (state->keyboardRow < 4) ? 10 : 3;
+      state->keyboardCol = (state->keyboardCol + 1) % cols;
+      drawKeyboard(state);
   }
 }
 
@@ -216,27 +198,22 @@ void handleCenter(AppState* state) {
     case MAIN_MENU:
       if (state->selectedMenuItem == 0) { state->currentState = SUBMENU_1; state->selectedWiFiItem = 0; drawSubmenu1(state); }
       else if (state->selectedMenuItem == 1) { state->currentState = SUBMENU_2; drawSubmenu2(state); }
-      else if (state->selectedMenuItem == 2) { state->currentState = KEYBOARD_INPUT; state->inputText = ""; state->isEnteringPassword = false; state->isEnteringSSID = false; drawKeyboard(state); }
+      else if (state->selectedMenuItem == 2) { state->inputText = ""; state->isEnteringPassword = false; state->isEnteringSSID = false; enterKeyboard(state); }
       break;
     case SUBMENU_1:
       if (state->selectedWiFiItem == 0) { state->currentState = WIFI_CONFIG; state->selectedWiFiItem = 0; drawWiFiConfig(state); }
-      // Add actions for other submenu items here if needed
-      break;
-    case SUBMENU_2:
-    case SUBMENU_3:
-      // These screens now use Key B (Back) or Key C (Home) to exit
       break;
     case WIFI_CONFIG:
       if (state->selectedWiFiItem == 0) { state->currentState = WIFI_SCAN; state->wifiScanScrollOffset = 0; scanWiFiNetworks(state); drawWiFiScan(state); }
       else if (state->selectedWiFiItem == 1) { state->currentState = WIFI_MANUAL_SETUP; state->wifiSSID = ""; state->wifiPassword = ""; state->selectedWiFiItem = 0; drawWiFiManualSetup(state); }
       else if (state->selectedWiFiItem == 2) { WiFi.disconnect(); clearWiFiCredentials(); drawWiFiConfig(state); }
-      else if (state->selectedWiFiItem == 3) { state->currentState = SUBMENU_1; drawSubmenu1(state); } // Back option
+      else if (state->selectedWiFiItem == 3) { state->currentState = SUBMENU_1; drawSubmenu1(state); }
       break;
     case WIFI_SCAN:
       if (state->foundNetworks > 0) {
         state->selectedNetworkIndex = state->selectedWiFiItem; state->wifiSSID = state->networkNames[state->selectedNetworkIndex]; state->wifiPassword = "";
         state->currentState = WIFI_CONNECT; state->wifiConnectionStatus = PENDING; drawWiFiConnect(state);
-      } else { scanWiFiNetworks(state); drawWiFiScan(state); } // Re-scan if no networks found
+      } else { scanWiFiNetworks(state); drawWiFiScan(state); }
       break;
     case WIFI_CONNECT:
       if (state->wifiConnectionStatus == PENDING) {
@@ -244,22 +221,19 @@ void handleCenter(AppState* state) {
           state->wifiConnectionStatus = CONNECTING; drawWiFiConnect(state);
           state->wifiConnectionStatus = connectToWiFi(state); drawWiFiConnect(state);
         } else {
-          state->currentState = KEYBOARD_INPUT; state->isEnteringPassword = true; state->isEnteringSSID = false; state->inputText = ""; drawKeyboard(state);
+          state->isEnteringPassword = true; state->isEnteringSSID = false; state->inputText = ""; enterKeyboard(state);
         }
-      } else { 
-        // If connection succeeded or failed, pressing OK/Center will go to WiFi Config
-        state->currentState = WIFI_CONFIG; drawWiFiConfig(state); 
-      }
+      } else { state->currentState = WIFI_CONFIG; drawWiFiConfig(state); }
       break;
     case WIFI_MANUAL_SETUP:
-      if (state->selectedWiFiItem == 0) { state->currentState = KEYBOARD_INPUT; state->isEnteringSSID = true; state->isEnteringPassword = false; state->inputText = state->wifiSSID; drawKeyboard(state); }
-      else if (state->selectedWiFiItem == 1) { state->currentState = KEYBOARD_INPUT; state->isEnteringPassword = true; state->isEnteringSSID = false; state->inputText = state->wifiPassword; drawKeyboard(state); }
+      if (state->selectedWiFiItem == 0) { state->isEnteringSSID = true; state->isEnteringPassword = false; state->inputText = state->wifiSSID; enterKeyboard(state); }
+      else if (state->selectedWiFiItem == 1) { state->isEnteringPassword = true; state->isEnteringSSID = false; state->inputText = state->wifiPassword; enterKeyboard(state); }
       else if (state->selectedWiFiItem == 2) {
         if(state->wifiSSID.length() > 0) {
           state->selectedNetworkIndex = -1; state->currentState = WIFI_CONNECT; state->wifiConnectionStatus = CONNECTING;
           drawWiFiConnect(state); state->wifiConnectionStatus = connectToWiFi(state); drawWiFiConnect(state);
         }
-      } else if (state->selectedWiFiItem == 3) { state->currentState = WIFI_CONFIG; drawWiFiConfig(state); } // Back option
+      } else if (state->selectedWiFiItem == 3) { state->currentState = WIFI_CONFIG; drawWiFiConfig(state); }
       break;
     case KEYBOARD_INPUT:
       handleKeyboardInput(state);
@@ -269,36 +243,38 @@ void handleCenter(AppState* state) {
 
 void handleKeyboardInput(AppState* state) {
   if (state->keyboardRow < 4) { // Character keys
-    char selectedChar = state->keyboardUpperCase ? keyboardUpper[state->keyboardRow][state->keyboardCol] : keyboard[state->keyboardRow][state->keyboardCol];
-    if (state->inputText.length() < 32) {
+    char selectedChar;
+    if (state->keyboardMode == MODE_ALPHA_LOWER) selectedChar = keyboard[state->keyboardRow][state->keyboardCol];
+    else if (state->keyboardMode == MODE_ALPHA_UPPER) selectedChar = keyboardUpper[state->keyboardRow][state->keyboardCol];
+    else selectedChar = keyboardNumSym[state->keyboardRow][state->keyboardCol];
+
+    if (state->inputText.length() < 64) {
         state->inputText += selectedChar;
     }
   } else { // Special keys row
-    if (state->keyboardCol == 0) { // Shift
-      state->keyboardUpperCase = !state->keyboardUpperCase;
-    } else if (state->keyboardCol == 1) { // Space
-      state->inputText += ' ';
-    } else if (state->keyboardCol == 2) { // Backspace
-      if (state->inputText.length() > 0) {
-        state->inputText.remove(state->inputText.length() - 1);
+    if (state->keyboardCol == 0) { // Shift / Mode
+        if (state->keyboardMode == MODE_ALPHA_LOWER) state->keyboardMode = MODE_ALPHA_UPPER;
+        else if (state->keyboardMode == MODE_ALPHA_UPPER) state->keyboardMode = MODE_ALPHA_LOWER;
+        else state->keyboardMode = MODE_ALPHA_LOWER; // From Num/Sym back to Lower
+    } else if (state->keyboardCol == 1) { // Cancel
+      state->currentState = state->previousState; // Go back to where we came from
+      // Re-draw the previous screen
+      switch(state->currentState) {
+        case WIFI_CONNECT: drawWiFiConnect(state); break;
+        case WIFI_MANUAL_SETUP: drawWiFiManualSetup(state); break;
+        default: drawMainMenu(state); break; // Default fallback
       }
-    } else if (state->keyboardCol == 3) { // Return/OK
+      return;
+    } else if (state->keyboardCol == 2) { // OK
       if (state->isEnteringPassword) {
         state->wifiPassword = state->inputText;
-        bool fromManual = (state->selectedNetworkIndex == -1);
-        if(fromManual) {
-             state->currentState = WIFI_MANUAL_SETUP;
-             drawWiFiManualSetup(state);
+        state->currentState = (state->selectedNetworkIndex == -1) ? WIFI_MANUAL_SETUP : WIFI_CONNECT;
+        if(state->currentState == WIFI_MANUAL_SETUP) {
+            drawWiFiManualSetup(state);
         } else {
-            state->currentState = WIFI_CONNECT;
             state->wifiConnectionStatus = CONNECTING;
             drawWiFiConnect(state);
-            ConnectionStatus status = connectToWiFi(state);
-            state->wifiConnectionStatus = status;
-            
-            if (status == SUCCESS) {
-                saveWiFiCredentials(state);
-            }
+            state->wifiConnectionStatus = connectToWiFi(state);
             drawWiFiConnect(state);
         }
       } else if (state->isEnteringSSID) {
@@ -306,12 +282,11 @@ void handleKeyboardInput(AppState* state) {
         state->currentState = WIFI_MANUAL_SETUP;
         drawWiFiManualSetup(state);
       } else {
-        // Exiting keyboard from general text input
         state->currentState = SUBMENU_3;
         drawSubmenu3(state);
       }
-      return; // Exit to prevent redrawing keyboard
+      return;
     }
   }
-  drawKeyboard(state); // Redraw keyboard to show changes
+  drawKeyboard(state);
 }
