@@ -3,8 +3,11 @@
 #include "MainMenu.h"
 #include "AutoConnecting.h"
 #include "WiFiUtils.h"
+#include "Buzzer.h"
 
+// --- ส่วนที่เปลี่ยนแปลง ---
 // สร้าง object สำหรับ FlashStorage **ที่นี่ที่เดียวเท่านั้น**
+// struct WifiCredentials ได้ถูกย้ายไปประกาศใน WiFiUtils.h แล้ว
 FlashStorage(credentials_storage, WifiCredentials);
 // --- จบส่วนที่เปลี่ยนแปลง ---
 
@@ -26,10 +29,19 @@ void setup() {
   appState.foundNetworks = 0;
   appState.selectedNetworkIndex = -1;
   appState.wifiConnectionStatus = PENDING;
-  
+
   tft.init();
   tft.setRotation(3);
   initButtons();
+  buzzer_init();
+
+  // ================ เพิ่มโค้ดทดสอบตรงนี้ ================
+  Serial.println("Testing Buzzer...");
+  beep_success();
+  delay(1000);
+  beep_fail();
+  Serial.println("Buzzer test complete.");
+  // ====================================================
 
   WifiCredentials savedCreds = credentials_storage.read();
   if (strlen(savedCreds.ssid) > 0) {
