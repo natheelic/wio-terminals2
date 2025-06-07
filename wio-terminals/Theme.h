@@ -40,25 +40,25 @@
 // #endif
 
 //  ตัวเลือกที่ 2: ธีม Nord Light (โทนสีสว่าง-สบายตา)
-#ifndef THEME_H
-#define THEME_H
+// #ifndef THEME_H
+// #define THEME_H
 
-// Color Palette (Nord Light Theme)
-#define THEME_BG        0xeceff4 // Light Gray-Blue Background
-#define THEME_PRIMARY   0x5e81ac // Muted Blue (Primary/Highlight)
-#define THEME_SECONDARY 0xd8dee9 // Light Gray (Borders/Inactive)
-#define THEME_TEXT      0x2e3440 // Dark Gray (Main Text)
-#define THEME_SUCCESS   0xa3be8c // Muted Green (Success Status)
-#define THEME_DANGER    0xbf616a // Muted Red (Error/Failed Status)
-#define THEME_WARNING   0xd08770 // Muted Orange (Warning/Pending Status)
-#define THEME_KEY_BG    0xffffff // White (Keyboard Key BG)
-#define THEME_KEY_TEXT  0x2e3440 // Dark Gray (Keyboard Key Text)
+// // Color Palette (Nord Light Theme)
+// #define THEME_BG        0xeceff4 // Light Gray-Blue Background
+// #define THEME_PRIMARY   0x5e81ac // Muted Blue (Primary/Highlight)
+// #define THEME_SECONDARY 0xd8dee9 // Light Gray (Borders/Inactive)
+// #define THEME_TEXT      0x2e3440 // Dark Gray (Main Text)
+// #define THEME_SUCCESS   0xa3be8c // Muted Green (Success Status)
+// #define THEME_DANGER    0xbf616a // Muted Red (Error/Failed Status)
+// #define THEME_WARNING   0xd08770 // Muted Orange (Warning/Pending Status)
+// #define THEME_KEY_BG    0xffffff // White (Keyboard Key BG)
+// #define THEME_KEY_TEXT  0x2e3440 // Dark Gray (Keyboard Key Text)
 
-// UI Constants
-#define CORNER_RADIUS 5
-#define PADDING 10
+// // UI Constants
+// #define CORNER_RADIUS 5
+// #define PADDING 10
 
-#endif
+// #endif
 
 // ตัวเลือกที่ 3: ธีม Gruvbox (โทนสีอบอุ่น-เรโทร)
 // #ifndef THEME_H
@@ -74,6 +74,48 @@
 // #define THEME_WARNING   0xfabd2f // Muted Yellow (Warning/Pending Status)
 // #define THEME_KEY_BG    0x3c3836 // Lighter Dark (Keyboard Key BG)
 // #define THEME_KEY_TEXT  0xebdbb2 // Cream (Keyboard Key Text)
+
+// // UI Constants
+// #define CORNER_RADIUS 5
+// #define PADDING 10
+
+// #endif
+
+
+#ifndef THEME_H
+#define THEME_H
+
+// Color Palette (Modern Dark Theme)
+#define THEME_BG        0x121212 // Near Black
+#define THEME_PRIMARY   0x03DAC6 // Teal Accent
+#define THEME_SECONDARY 0x373737 // Lighter Gray for Borders
+#define THEME_TEXT      0xFFFFFF // White
+#define THEME_SUCCESS   0x4CAF50 // Material Green
+#define THEME_DANGER    0xF44336 // Material Red
+#define THEME_WARNING   0xFFC107 // Material Amber
+#define THEME_KEY_BG    0x1E1E1E // Card/Key Background
+#define THEME_KEY_TEXT  0xFFFFFF // White
+
+// UI Constants
+#define CORNER_RADIUS 5
+#define PADDING 10
+
+#endif
+
+
+// #ifndef THEME_H
+// #define THEME_H
+
+// // Color Palette (Classic Light Theme)
+// #define THEME_BG        0xF5F5F5 // Very Light Gray
+// #define THEME_PRIMARY   0x007AFF // Standard Blue Accent
+// #define THEME_SECONDARY 0xE0E0E0 // Light Gray for Borders
+// #define THEME_TEXT      0x1C1C1E // Near Black
+// #define THEME_SUCCESS   0x34C759 // Standard Green
+// #define THEME_DANGER    0xFF3B30 // Standard Red
+// #define THEME_WARNING   0xFF9500 // Standard Orange
+// #define THEME_KEY_BG    0xFFFFFF // White Card/Key Background
+// #define THEME_KEY_TEXT  0x1C1C1E // Near Black
 
 // // UI Constants
 // #define CORNER_RADIUS 5

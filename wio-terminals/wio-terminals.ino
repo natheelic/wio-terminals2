@@ -35,14 +35,6 @@ void setup() {
   initButtons();
   buzzer_init();
 
-  // ================ เพิ่มโค้ดทดสอบตรงนี้ ================
-  Serial.println("Testing Buzzer...");
-  beep_success();
-  delay(1000);
-  beep_fail();
-  Serial.println("Buzzer test complete.");
-  // ====================================================
-
   WifiCredentials savedCreds = credentials_storage.read();
   if (strlen(savedCreds.ssid) > 0) {
     appState.wifiSSID = String(savedCreds.ssid);
